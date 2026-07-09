@@ -49,13 +49,32 @@ confidence; select/delete/redraw supported).
 Simple skirt mesh → predicted two-panel segmentation, compared against
 labelled ground truth, with failure analysis.
 
-- Script: `exp4_auto_segmentation.sh`
-- Measured mean IoU: `skirt_simple` 1.000, `skirt_hard`
-  (bulge 0.12 + noise) 0.999, `skirt_noisy` see report.
-- Failure analysis: the proposer depends on exactly two dominant
-  boundary loops and a widest-silhouette prior; distorted or additional
-  openings degrade it (KNOWN_LIMITATIONS #1). Reports land in
-  `out/experiments/exp4_*/auto_segmentation_report.json`.
+- Script: `exp4_auto_segmentation.sh` — runs **two baselines**:
+  the silhouette prior (`--baseline silhouette`) and a D-Charts-style
+  quasi-developable chart grower (`--baseline dcharts`).
+- Measured mean IoU vs construction ground truth:
+
+  | case | silhouette | d-charts | d-charts panel count |
+  |---|---|---|---|
+  | skirt_simple | 1.000 | 0.939 | 2 (truth 2) |
+  | skirt_noisy | 1.000 | 0.892 | 2 (truth 2) |
+  | skirt_hard | 0.999 | 0.583 | 2 (truth 2) |
+  | skirt_aline | — | 0.548 | 3 (truth 2) |
+  | skirt_fourpanel | 0.500 | 0.477 | 2 (truth 4) |
+
+- Failure analysis:
+  - *Silhouette prior*: depends on exactly two dominant boundary loops
+    and a widest-silhouette assumption — it hard-codes two side seams,
+    so the four-panel skirt caps at IoU 0.5 (KNOWN_LIMITATIONS #1).
+  - *D-Charts*: developability is blind to construction. The whole
+    frustum is one perfect cone, so the wrap-around cut position is
+    arbitrary (0.94 on skirt_simple is seed luck, asserted < 0.95 in
+    tests); curvature (A-line/hard) fragments or misplaces charts
+    (0.55–0.58); it also cannot see the four construction panels of a
+    smooth tube (0.48). Disk topology is enforced, so every chart is
+    flattenable — useful as a fallback segmentation, not as a
+    construction-panel predictor (RESEARCH.md §2.3).
+  - Reports land in `out/experiments/exp4/*/auto_segmentation_report.json`.
 
 ## Experiment 5 — pre-cut boundary matching
 Two separate panel meshes in one file (disconnected components, no cut

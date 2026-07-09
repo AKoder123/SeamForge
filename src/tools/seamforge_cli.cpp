@@ -7,7 +7,7 @@
 //             [--project P.sfrproj] [--heatmap]
 //             full two-panel workflow: segment, flatten, distortion, seam
 //             pairing, regularise, SVG/DXF export, project save
-//   auto      --mesh M --truth GT.json --out DIR
+//   auto      --mesh M --truth GT.json --out DIR [--baseline silhouette|dcharts]
 //             automatic segmentation baseline vs ground truth (IoU)
 //   match     --mesh M --out DIR [--flattener lscm|arap] [--project P]
 //             pre-cut garment (separate panel meshes as disconnected
@@ -26,6 +26,7 @@
 #include "core/Relations.h"
 #include "core/Seam.h"
 #include "core/Segmentation.h"
+#include "core/SegmentationBaselines.h"
 #include "core/Validation.h"
 
 #include <nlohmann/json.hpp>
@@ -295,16 +296,43 @@ int cmdPipeline(const std::map<std::string, std::string>& a) {
 int cmdAuto(const std::map<std::string, std::string>& a) {
     if (!a.count("mesh") || !a.count("truth") || !a.count("out"))
         return fail("--mesh, --truth, --out required");
+    std::string baseline = a.count("baseline") ? a.at("baseline") : "silhouette";
     sf::TriMesh mesh;
     sf::ValidationReport rep;
     std::string err;
     if (!loadAndValidate(a.at("mesh"), mesh, rep, err)) return fail(err);
 
-    auto prop = sf::proposeSideSeams(mesh);
-    std::cerr << prop.log;
-    if (prop.seams.size() < 2) return fail("proposal produced fewer than two seams");
-    auto seg = sf::segmentBySeams(mesh, prop.seams);
-    for (const auto& p : seg.problems) std::cerr << "segmentation: " << p << "\n";
+    // predicted face -> panel/chart label, per baseline
+    std::vector<int> pred(mesh.F.size(), -1);
+    int predPanels = 0;
+    json baselineInfo;
+    if (baseline == "silhouette") {
+        auto prop = sf::proposeSideSeams(mesh);
+        std::cerr << prop.log;
+        if (prop.seams.size() < 2) return fail("proposal produced fewer than two seams");
+        auto seg = sf::segmentBySeams(mesh, prop.seams);
+        for (const auto& p : seg.problems) std::cerr << "segmentation: " << p << "\n";
+        for (const auto& p : seg.panels)
+            for (int f : p.faces) pred[f] = p.id;
+        predPanels = (int)seg.panels.size();
+        json seamsJson = json::array();
+        for (const auto& s : prop.seams)
+            seamsJson.push_back({{"confidence", s.confidence}, {"evidence", s.evidence}});
+        baselineInfo["proposedSeams"] = seamsJson;
+    } else if (baseline == "dcharts") {
+        auto dc = sf::dchartsSegment(mesh);
+        std::cerr << dc.log;
+        if (dc.chartCount < 1) return fail("d-charts produced no charts");
+        pred = dc.faceChart;
+        predPanels = dc.chartCount;
+        baselineInfo["chartRmsFit"] = dc.chartRmsFit;
+        baselineInfo["iterations"] = dc.iterationsRun;
+        baselineInfo["note"] =
+            "chart boundaries minimise developability error, not construction "
+            "convention; cut placement on smooth garments is arbitrary";
+    } else {
+        return fail("unknown baseline '" + baseline + "' (silhouette|dcharts)");
+    }
 
     std::ifstream tf(a.at("truth"));
     if (!tf) return fail("cannot open " + a.at("truth"));
@@ -315,23 +343,20 @@ int cmdAuto(const std::map<std::string, std::string>& a) {
     if ((int)gtLabel.size() != (int)mesh.F.size())
         return fail("ground truth face count mismatch");
 
-    // predicted face -> panel
-    std::vector<int> pred(mesh.F.size(), -1);
-    for (const auto& p : seg.panels)
-        for (int f : p.faces) pred[f] = p.id;
-
     // best-match IoU per ground-truth panel (greedy over predicted panels)
     json report;
-    report["predictedPanelCount"] = seg.panels.size();
+    report["baseline"] = baseline;
+    report["baselineInfo"] = baselineInfo;
+    report["predictedPanelCount"] = predPanels;
     report["truthPanelCount"] = gtPanels;
     double meanIoU = 0;
     json ious = json::array();
     for (int g = 0; g < gtPanels; ++g) {
         double best = 0;
-        for (size_t pp = 0; pp < seg.panels.size(); ++pp) {
+        for (int pp = 0; pp < predPanels; ++pp) {
             int inter = 0, uni = 0;
             for (size_t f = 0; f < pred.size(); ++f) {
-                bool inG = gtLabel[f] == g, inP = pred[f] == (int)pp;
+                bool inG = gtLabel[f] == g, inP = pred[f] == pp;
                 inter += inG && inP;
                 uni += inG || inP;
             }
@@ -342,16 +367,14 @@ int cmdAuto(const std::map<std::string, std::string>& a) {
     }
     report["perPanelIoU"] = ious;
     report["meanIoU"] = meanIoU;
-    json seamsJson = json::array();
-    for (const auto& s : prop.seams)
-        seamsJson.push_back({{"confidence", s.confidence}, {"evidence", s.evidence}});
-    report["proposedSeams"] = seamsJson;
 
     fs::create_directories(a.at("out"));
     std::ofstream rf(fs::path(a.at("out")) / "auto_segmentation_report.json");
     rf << report.dump(1) << "\n";
-    std::cout << "panel count " << seg.panels.size() << " (truth " << gtPanels
-              << "), mean IoU " << meanIoU << "\n";
+    std::cout << "baseline " << baseline << ": panel count " << predPanels
+              << " (truth " << gtPanels << "), mean IoU " << meanIoU << "\n";
+    // dcharts is an analysis baseline: report, do not gate on IoU
+    if (baseline == "dcharts") return 0;
     return meanIoU > 0.5 ? 0 : 2;
 }
 

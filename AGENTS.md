@@ -56,7 +56,7 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 | Validation | `src/core/Validation.{h,cpp}` |
 | Import/export meshes | `src/core/Io.{h,cpp}` |
 | Seams + proposal | `src/core/Seam.{h,cpp}`, `Curvature.*` |
-| Cutting/panels | `src/core/Segmentation.{h,cpp}` |
+| Cutting/panels | `src/core/Segmentation.{h,cpp}`, `SegmentationBaselines.*` (D-Charts) |
 | Flattening + distortion | `src/core/Flatten.{h,cpp}` |
 | Seam pairing | `src/core/Relations.{h,cpp}`, `Matching.{h,cpp}` (pre-cut) |
 | Regularisation | `src/core/Regularize.{h,cpp}` |
@@ -73,5 +73,5 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 - Sample end-to-end outputs land in `out/` (gitignored).
 
 ## Current next task
-See ROADMAP.md "Next priorities" — #1 is the D-Charts quasi-developable
-segmentation baseline; CONTINUATION_GUIDE.md has per-task sketches.
+See ROADMAP.md "Next priorities" — #1 is benchmark dataset growth
+(procedural T-shirt/trousers/darts); CONTINUATION_GUIDE.md has sketches.

@@ -17,7 +17,7 @@ Working and tested end-to-end:
 - Qt GUI renders 3D + 2D, draws/deletes seams, segments, flattens,
   exports, saves/loads, undo/redo. Verified by Xvfb screenshot
   (docs/images/gui_skirt_project.png).
-- 41/41 Catch2 tests green in ~0.4 s (incl. Bezier fitting + boundary matching).
+- 45/45 Catch2 tests green in ~0.5 s (Bezier fitting, boundary matching, D-Charts baseline).
 
 Read KNOWN_LIMITATIONS.md for the honest gap list.
 
@@ -50,21 +50,24 @@ there — D16); GUI has a "Match Boundaries" action. Tests in
 `tests/test_matching.cpp`; remaining gaps in KNOWN_LIMITATIONS #5
 (no partial-arc matching, panels must be near sewn position).
 
-### 1. D-Charts developable baseline (ROADMAP #16)
-- New `SegmentationBaselines.{h,cpp}`: greedy chart growth; fitting
-  proxy per chart = cone (Julius et al. eq. 2: normals lie on a circle);
-  merge/regularise; convert chart boundaries to seam paths (shortest
-  edge paths along chart frontier), then reuse the normal pipeline.
-- Evaluate with `seamforge-cli auto --baseline dcharts`.
+### ~~D-Charts developable baseline~~ — DONE
+Implemented as `sf::dchartsSegment` (SegmentationBaselines.h/.cpp):
+cone-proxy fitting (least normal variance axis), greedy growth with a
+compactness term, Lloyd re-fit/reseed iterations, and incremental
+Euler-characteristic disk enforcement (forces ≥2 charts on tubes, every
+chart flattenable). Evaluated via `seamforge-cli auto --baseline
+dcharts`; measured numbers + failure analysis in experiments/README.md.
+Not converted to seam paths / production pipeline on purpose — it is an
+analysis baseline (construction-blind by nature).
 
-### 2. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
+### 1. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
 - Extend Procedural.cpp: trousers = two frustum legs + Y-join, known
   seam paths at inseam/outseam; T-shirt = torso tube + two sleeve tubes
   with raglan or set-in boundaries. Keep exact face labels. Darts:
   radial slit in a disk panel (seam pairing with itself → exercises
   KNOWN_LIMITATIONS #4).
 
-### 3. XPBD validation prototype (ROADMAP #17)
+### 2. XPBD validation prototype (ROADMAP #17)
 - `experiments/resim/`: load `.sfrproj`; build particle system from
   panel UVs (rest lengths from UV edges — that's the point: patterns,
   not the 3D mesh, define rest state); constraints: edge distance +
@@ -74,7 +77,7 @@ there — D16); GUI has a "Match Boundaries" action. Tests in
   silhouette IoU from 3 axis views. Report into `metrics.json`.
   Accept: Chamfer < 1% of bbox diag on `skirt_simple`.
 
-### 4. BFF flattener
+### 3. BFF flattener
 - Either port the reference implementation's core (MIT, ~2k lines,
   cholmod-dependent — replace with Eigen) or implement from the paper
   (boundary curvature → conformal factors → extension). Slot in as

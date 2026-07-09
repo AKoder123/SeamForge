@@ -14,8 +14,8 @@
 
 ## Layers
 
-### Unit + integration tests (Catch2, `tests/`, 41 cases)
-Run: `ctest --test-dir build` — currently **41/41 passing**, ~0.4 s.
+### Unit + integration tests (Catch2, `tests/`, 45 cases)
+Run: `ctest --test-dir build` — currently **45/45 passing**, ~0.5 s.
 
 | File | Covers |
 |---|---|
@@ -27,6 +27,7 @@ Run: `ctest --test-dir build` — currently **41/41 passing**, ~0.4 s.
 | `test_regularize.cpp` | deviation ≤ tolerance, point reduction, corner preservation/detection, straight-run detection, raw kept |
 | `test_bezier.cpp` | rectangle → 4 true lines; skirt panel → few cubics + line seams, closed connected chain, fit deviation bound, arc-length error ≤ 0.5%, whole-loop length within 1%, determinism, raw untouched; corner-free loop fallback |
 | `test_matching.cpp` | pre-cut skirt: side arcs matched (conf < 1.0, endpoints coincide, 2D mismatch < 2%), waist/hem reported unmatched, determinism, graceful decline (<2 panels), cut-ancestry boundaries excluded |
+| `test_dcharts.cpp` | full coverage, ≥2 charts on a tube, every chart a topological disk (χ=1), near-zero cone fit on the developable frustum, determinism, component separation, and an explicit construction-blindness bound (IoU < 0.95 vs GT) |
 | `test_export_project.cpp` | SVG completeness + byte-determinism, DXF structure, **lossless project round-trip**, garbage rejection |
 | `test_propose.cpp` | 2 proposals, valid paths, confidence ∈ (0,1), endpoints on openings, segmentation IoU > 0.9, graceful decline on closed mesh |
 

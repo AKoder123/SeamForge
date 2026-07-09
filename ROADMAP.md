@@ -20,24 +20,21 @@ this repository; 🔶 = partial; ⬜ = not started.
 | 13 | SVG export | ✅ | deterministic, labelled; DXF R12 minimal as bonus |
 | 14 | Project save/load | ✅ | .sfrproj schema v1, lossless round-trip |
 | 15 | Assisted seam proposal | ✅ | silhouette-prior geodesics + curvature evidence, capped confidence |
-| 16 | Automatic segmentation baseline | 🔶 | proposal-based baseline: IoU 1.0 clean / 0.999 hard; D-Charts baseline pending |
+| 16 | Automatic segmentation baseline | ✅ | two baselines: silhouette prior (IoU 1.0 clean / 0.999 hard) and D-Charts quasi-developable (disk-enforced; IoU 0.94/0.58 — quantifies construction-blindness) |
 | 17 | Reconstruction validation | ⬜ | XPBD prototype: pin paired seam vertices, relax, Chamfer vs source |
 | 18 | Learned experiments | ⬜ | isolated, behind interfaces; Korosteleva & Lee dataset |
 
 ## Next priorities (in order)
 
-1. **D-Charts quasi-developable baseline** (stage 16): second automatic
-   segmentation baseline; compare on benchmark IoU vs the silhouette
-   prior; failure analysis on `skirt_hard`, T-shirt.
-2. **Dataset growth** (TEST_STRATEGY): procedural T-shirt (tube + two
+1. **Dataset growth** (TEST_STRATEGY): procedural T-shirt (tube + two
    sleeve tubes), trousers, dart cases (a dart = interior seam whose two
    sides pair with each other — the relation model already supports it).
-3. **XPBD validation prototype** (stage 17): assemble panels from
+2. **XPBD validation prototype** (stage 17): assemble panels from
    `.sfrproj`, pin seam pairs, relax, report Chamfer/normal/silhouette
    metrics into `metrics.json`.
-4. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
+3. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
    lengths → exact seam-length equalisation across paired seams.
-5. **Learned experiments** (stage 18): seam-candidate scoring first
+4. **Learned experiments** (stage 18): seam-candidate scoring first
    (smallest, best-supervised task), then panel-count/topology.
 
 ## Deliberately deferred (per product direction)

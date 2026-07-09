@@ -114,3 +114,18 @@ validation with `weldDuplicates = false`. The general pipeline keeps
 welding on: for a single-garment mesh, coincident duplicates are
 defects, not information. The GUI import path still welds; pre-cut
 inputs should use the CLI match workflow (KNOWN_LIMITATIONS #5).
+
+## D17 — D-Charts kept as an analysis baseline, not a production segmenter (2026-07)
+The D-Charts-style baseline (cone-proxy fitting + Lloyd + disk-topology
+enforcement) is deliberately not wired into the production pipeline.
+Measured on the benchmark it is structurally construction-blind: the
+frustum skirt is a single perfect cone, so developability gives no reason
+to cut at the true side seams (IoU 0.94 on skirt_simple is seed
+placement luck — a test asserts < 0.95 so a silently lucky result cannot
+masquerade as correctness; 0.55–0.58 with curvature/noise; 0.48 on the
+four-panel tube). Its value: a garment-agnostic fallback that always
+yields flattenable disk charts, and a quantified lower bound that any
+future learned or prior-based segmenter must beat. Disk enforcement is
+incremental Euler characteristic (chi must stay 1), which also forces
+>= 2 charts on tubes — matching the physical fact that a closed tube
+cannot be flattened without a cut.

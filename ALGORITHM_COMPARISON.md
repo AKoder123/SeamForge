@@ -30,7 +30,7 @@ scale gradients that corrupt seam lengths.
 | **Cut along confirmed seam curves** (flood fill across non-seam edges) | seam vertex paths | exact panels + ancestry | perfect when seams known | O(F) | **implemented, primary** |
 | Silhouette-prior side-seam proposal + cut | clean tube-like garment, 2 openings | 2 panels, confidence | skirts/dresses: IoU 1.00 clean, 0.999 hard | O(E log V) | **implemented** (experiment 3/4) |
 | Dihedral-crease region growing | visible seam geometry | candidate boundaries | scans w/ stitching ridges | O(F) | evidence only (feeds confidence) |
-| D-Charts quasi-developable growth | manifold mesh, threshold | dev. charts | good baseline, boundaries not construction-aware | O(F log F) | planned baseline #2 |
+| **D-Charts quasi-developable growth** (cone proxy + Lloyd + disk enforcement) | manifold mesh | flattenable charts | measured: IoU 0.94 clean / 0.58 hard / 0.48 four-panel — developable ≠ construction | O(F log F) per pass | **implemented** (`dchartsSegment`, `auto --baseline dcharts`) |
 | Spectral/geodesic clustering | Laplacian eigs | k parts | sleeve/torso split | eigensolve | deferred |
 | Learned (NeuralTailor-style) | trained model | panels+stitches | broad but unguaranteed | GPU | deferred, isolated experiments |
 
