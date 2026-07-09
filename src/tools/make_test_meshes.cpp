@@ -3,6 +3,7 @@
 
 #include "core/Io.h"
 #include "core/Procedural.h"
+#include "core/Segmentation.h"
 
 #include <nlohmann/json.hpp>
 
@@ -70,6 +71,35 @@ int main(int argc, char** argv) {
     hard.bulge = 0.12;                             // strong curvature + noise
     hard.noise = 0.004;
     writeCase(dir, "skirt_hard", hard);
+
+    // pre-cut variant: the simple skirt's two panels as disconnected
+    // components in one OBJ (exercises boundary matching, `seamforge-cli match`)
+    {
+        sf::GroundTruth gt;
+        sf::TriMesh m = sf::makeSkirt(sf::SkirtOptions{}, &gt);
+        std::vector<sf::Seam> seams;
+        for (size_t i = 0; i < gt.seamPaths.size(); ++i) {
+            sf::Seam s;
+            s.id = (int)i;
+            s.vertices = gt.seamPaths[i];
+            seams.push_back(std::move(s));
+        }
+        auto seg = sf::segmentBySeams(m, seams);
+        sf::TriMesh merged;
+        for (const auto& p : seg.panels) {
+            int base = (int)merged.V.size();
+            merged.V.insert(merged.V.end(), p.V.begin(), p.V.end());
+            for (const auto& f : p.F)
+                merged.F.push_back({f[0] + base, f[1] + base, f[2] + base});
+        }
+        std::string err;
+        if (!sf::writeObj((dir / "skirt_precut.obj").string(), merged, &err)) {
+            std::cerr << "write skirt_precut: " << err << "\n";
+            return 1;
+        }
+        std::cout << "skirt_precut: " << merged.V.size() << " verts, "
+                  << merged.F.size() << " faces (2 components)\n";
+    }
 
     std::cout << "done -> " << dir << "\n";
     return 0;

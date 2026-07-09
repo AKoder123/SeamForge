@@ -57,6 +57,18 @@ labelled ground truth, with failure analysis.
   openings degrade it (KNOWN_LIMITATIONS #1). Reports land in
   `out/experiments/exp4_*/auto_segmentation_report.json`.
 
+## Experiment 5 — pre-cut boundary matching
+Two separate panel meshes in one file (disconnected components, no cut
+ancestry) → matched seam proposals with confidence, unmatched arcs
+reported, flattened panels, SVG, project.
+
+- Script: `exp5_precut_matching.sh`
+- Measured: both side seams matched (score 1.0, confidence capped 0.9,
+  reversed direction detected), waist/hem arcs correctly unmatched (4),
+  2D seam-length mismatch ~1e-7 %, project round-trip IDENTICAL.
+- Note: duplicate welding is disabled in this workflow (DECISION_LOG
+  D16) so digitally-cut coincident boundaries survive import.
+
 ## Not yet run
 - Learned experiments (panel count, seam scoring, NeuralTailor-style
   reconstruction) — deliberately deferred until after the deterministic

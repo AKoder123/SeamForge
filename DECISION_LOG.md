@@ -103,3 +103,14 @@ fitted-vs-raw arc-length error and re-fit with a 4× tighter tolerance
 garment patterns need exact corners at seam junctions, so smoothing
 across them would be wrong. The raw polyline remains the revert layer
 and the DXF export still uses polylines (R12 has no cubics).
+
+## D16 — Duplicate welding disabled in the pre-cut matching workflow (2026-07)
+Digitally pre-cut garments carry exactly coincident vertices along the
+cut boundaries of adjacent panels. The standard validation weld would
+silently sew the panels back into one component — destroying precisely
+the structure the boundary matcher needs (observed: `skirt_precut.obj`
+collapsed from 2 components to 1). `seamforge-cli match` therefore runs
+validation with `weldDuplicates = false`. The general pipeline keeps
+welding on: for a single-garment mesh, coincident duplicates are
+defects, not information. The GUI import path still welds; pre-cut
+inputs should use the CLI match workflow (KNOWN_LIMITATIONS #5).

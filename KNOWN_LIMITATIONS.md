@@ -27,11 +27,17 @@ modes observed during development.
    seam bordering >2 panels yields confidence 0.3 + note. Darts (a seam
    pairing with itself) therefore parse but aren't specially handled yet.
 
-5. **No independent-boundary seam matching.** Pairing currently exists
-   only for boundaries created by cutting the same curve
-   (deterministic). Two pre-existing mesh boundaries that should be sewn
-   (e.g. a garment supplied as separate panel meshes) are listed as
-   unmatched. ROADMAP #2.
+5. **Boundary matching is whole-arc and geometry-driven.** The matcher
+   (`proposeBoundaryMatches`, `seamforge-cli match`) pairs boundary arcs
+   split at 3D corners; it does not split arcs mid-way, so partial seam
+   matches (one long edge sewn to two short ones) are not found. Panels
+   must lie near their sewn position: separated or flattened-out panel
+   layouts defeat the proximity score. Closed loops (no corners) match
+   with unresolved orientation (confidence capped at 0.5). Also note the
+   GUI import path welds exactly-coincident duplicate vertices, which
+   sews digitally pre-cut panels back together before matching can run -
+   use `seamforge-cli match` (welding disabled, DECISION_LOG D16) for
+   such inputs.
 
 6. **ARAP does not guarantee flip-free output.** Zero flips on the whole
    benchmark, but pathological scans could flip; flips are counted and

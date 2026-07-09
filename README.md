@@ -54,7 +54,11 @@ build/src/tools/seamforge-cli auto \
   --mesh data/meshes/skirt_simple.obj \
   --truth data/meshes/skirt_simple.gt.json --out out/auto   # IoU vs ground truth
 
-bash experiments/run_all.sh       # experiments 1-4
+build/src/tools/seamforge-cli match \
+  --mesh data/meshes/skirt_precut.obj --out out/precut   # pre-cut panels:
+                                    # boundary-matched seam proposals
+
+bash experiments/run_all.sh       # experiments 1-5
 ```
 
 ## GUI

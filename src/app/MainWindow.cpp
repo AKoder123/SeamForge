@@ -111,6 +111,11 @@ MainWindow::MainWindow() {
         QString log;
         state_->proposeSeams(&log);
     });
+    tb->addAction("Match Boundaries", this, [this] {
+        QString err;
+        if (!state_->matchBoundaries(&err))
+            QMessageBox::warning(this, "Boundary matching", err);
+    });
     tb->addAction("Segment", this, [this] {
         QString err;
         if (!state_->segment(&err))

@@ -7,6 +7,7 @@ add_library(seamforge_core STATIC
     Segmentation.cpp
     Flatten.cpp
     Relations.cpp
+    Matching.cpp
     Regularize.cpp
     Export.cpp
     Project.cpp

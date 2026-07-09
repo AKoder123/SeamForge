@@ -17,7 +17,7 @@ Working and tested end-to-end:
 - Qt GUI renders 3D + 2D, draws/deletes seams, segments, flattens,
   exports, saves/loads, undo/redo. Verified by Xvfb screenshot
   (docs/images/gui_skirt_project.png).
-- 36/36 Catch2 tests green in ~0.4 s (incl. Bezier boundary fitting).
+- 41/41 Catch2 tests green in ~0.4 s (incl. Bezier fitting + boundary matching).
 
 Read KNOWN_LIMITATIONS.md for the honest gap list.
 
@@ -40,34 +40,31 @@ Tests in `tests/test_bezier.cpp`. Remaining niceties are listed in
 KNOWN_LIMITATIONS #8 (curve-native handle editing, smooth join on
 corner-free loops).
 
-### 1. Independent-boundary seam matcher (ROADMAP #11 extension)
-- New module `Matching.{h,cpp}`:
-  `std::vector<SeamRelation> proposeBoundaryMatches(panels, mesh)`.
-- Candidates: all pairs of `BoundarySegment`s with `seamId == -1` from
-  different panels. Score = w1·lengthSimilarity + w2·meanClosestPoint
-  distance in ORIGINAL 3D (use `toOrigV` to get 3D positions) +
-  w3·endpoint proximity. Emit `source="boundary-matching"`,
-  confidence = normalised score (cap 0.9), both directions tested and
-  `reversed` set by whichever endpoint pairing is closer.
-- Test: split the skirt into two separate OBJ panel meshes, import as
-  one scene (2 components), verify the waist/hem stay unmatched and the
-  two side pairs are found.
+### ~~Independent-boundary seam matcher~~ — DONE
+Implemented as `sf::proposeBoundaryMatches` (Matching.h/.cpp): boundary
+loops split at 3D corners into arcs, scored by length ratio + mean
+Chamfer distance, greedy best-first assignment, orientation from
+endpoint correspondence, ambiguity/unmatched reporting. CLI
+`seamforge-cli match` runs the full pre-cut workflow (welding disabled
+there — D16); GUI has a "Match Boundaries" action. Tests in
+`tests/test_matching.cpp`; remaining gaps in KNOWN_LIMITATIONS #5
+(no partial-arc matching, panels must be near sewn position).
 
-### 2. D-Charts developable baseline (ROADMAP #16)
+### 1. D-Charts developable baseline (ROADMAP #16)
 - New `SegmentationBaselines.{h,cpp}`: greedy chart growth; fitting
   proxy per chart = cone (Julius et al. eq. 2: normals lie on a circle);
   merge/regularise; convert chart boundaries to seam paths (shortest
   edge paths along chart frontier), then reuse the normal pipeline.
 - Evaluate with `seamforge-cli auto --baseline dcharts`.
 
-### 3. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
+### 2. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
 - Extend Procedural.cpp: trousers = two frustum legs + Y-join, known
   seam paths at inseam/outseam; T-shirt = torso tube + two sleeve tubes
   with raglan or set-in boundaries. Keep exact face labels. Darts:
   radial slit in a disk panel (seam pairing with itself → exercises
   KNOWN_LIMITATIONS #4).
 
-### 4. XPBD validation prototype (ROADMAP #17)
+### 3. XPBD validation prototype (ROADMAP #17)
 - `experiments/resim/`: load `.sfrproj`; build particle system from
   panel UVs (rest lengths from UV edges — that's the point: patterns,
   not the 3D mesh, define rest state); constraints: edge distance +
@@ -77,7 +74,7 @@ corner-free loops).
   silhouette IoU from 3 axis views. Report into `metrics.json`.
   Accept: Chamfer < 1% of bbox diag on `skirt_simple`.
 
-### 5. BFF flattener
+### 4. BFF flattener
 - Either port the reference implementation's core (MIT, ~2k lines,
   cholmod-dependent — replace with Eigen) or implement from the paper
   (boundary curvature → conformal factors → extension). Slot in as

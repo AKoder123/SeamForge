@@ -14,8 +14,8 @@
 
 ## Layers
 
-### Unit + integration tests (Catch2, `tests/`, 36 cases)
-Run: `ctest --test-dir build` — currently **36/36 passing**, ~0.4 s.
+### Unit + integration tests (Catch2, `tests/`, 41 cases)
+Run: `ctest --test-dir build` — currently **41/41 passing**, ~0.4 s.
 
 | File | Covers |
 |---|---|
@@ -26,6 +26,7 @@ Run: `ctest --test-dir build` — currently **36/36 passing**, ~0.4 s.
 | `test_relations.cpp` | vertex-exact deterministic pairing, 2D length mismatch < 2%, ambiguity flag on non-separating seam |
 | `test_regularize.cpp` | deviation ≤ tolerance, point reduction, corner preservation/detection, straight-run detection, raw kept |
 | `test_bezier.cpp` | rectangle → 4 true lines; skirt panel → few cubics + line seams, closed connected chain, fit deviation bound, arc-length error ≤ 0.5%, whole-loop length within 1%, determinism, raw untouched; corner-free loop fallback |
+| `test_matching.cpp` | pre-cut skirt: side arcs matched (conf < 1.0, endpoints coincide, 2D mismatch < 2%), waist/hem reported unmatched, determinism, graceful decline (<2 panels), cut-ancestry boundaries excluded |
 | `test_export_project.cpp` | SVG completeness + byte-determinism, DXF structure, **lossless project round-trip**, garbage rejection |
 | `test_propose.cpp` | 2 proposals, valid paths, confidence ∈ (0,1), endpoints on openings, segmentation IoU > 0.9, graceful decline on closed mesh |
 
@@ -65,6 +66,8 @@ build/src/tools/seamforge-cli pipeline --mesh data/meshes/skirt_simple.obj \
 build/src/tools/seamforge-cli roundtrip --project out/skirt/skirt.sfrproj
 build/src/tools/seamforge-cli auto --mesh data/meshes/skirt_simple.obj \
     --truth data/meshes/skirt_simple.gt.json --out out/auto
+build/src/tools/seamforge-cli match --mesh data/meshes/skirt_precut.obj \
+    --out out/precut --project out/precut/p.sfrproj
 ```
 All exit 0; `metrics.json` records the measured distortion.
 
@@ -85,6 +88,7 @@ All exit 0; `metrics.json` records the measured distortion.
 | `skirt_noisy` | jittered vertices (scan-like) |
 | `skirt_dense` | 10k faces, performance sanity |
 | `skirt_hard` | strong bulge + noise — proposal stressor (IoU 0.999) |
+| `skirt_precut` | two disconnected panel meshes — boundary-matching case |
 
 Each ships `*.gt.json` (face labels + seam paths) and `*.seams.json`
 (pipeline-ready). Planned extensions: T-shirt, trousers, dress, darts,

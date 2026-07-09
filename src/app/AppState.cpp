@@ -1,6 +1,7 @@
 #include "AppState.h"
 
 #include "core/Io.h"
+#include "core/Matching.h"
 
 #include <algorithm>
 
@@ -172,6 +173,36 @@ void AppState::proposeSeams(QString* log) {
     }
     emit logMessage(QString::fromStdString(prop.log));
     emit changed();
+}
+
+bool AppState::matchBoundaries(QString* err) {
+    if (panels.size() < 2) {
+        // pre-cut garments arrive as disconnected components
+        auto seg = sf::segmentBySeams(mesh, {});
+        if (seg.panels.size() < 2) {
+            if (err)
+                *err = "boundary matching needs at least two panels "
+                       "(segment first, or import a mesh with separate panel components)";
+            return false;
+        }
+        pushUndo();
+        panels = std::move(seg.panels);
+    } else {
+        pushUndo();
+    }
+    sf::BoundaryMatchOptions opt;
+    opt.firstSeamId = nextSeamId();
+    auto match = sf::proposeBoundaryMatches(panels, opt);
+    emit logMessage(QString::fromStdString(match.log));
+    if (match.relations.empty()) {
+        if (err) *err = "no boundary matches found";
+        emit changed();
+        return false;
+    }
+    for (auto& s : match.seams) seams.push_back(std::move(s));
+    for (auto& r : match.relations) relations.push_back(std::move(r));
+    emit changed();
+    return true;
 }
 
 bool AppState::segment(QString* err) {

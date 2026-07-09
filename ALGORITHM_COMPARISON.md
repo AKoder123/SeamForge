@@ -39,7 +39,7 @@ scale gradients that corrupt seam lengths.
 | Method | Precondition | Guarantee | Status |
 |---|---|---|---|
 | **Cut ancestry** (both sides of one cut curve) | seam was cut by us | deterministic, vertex-exact, confidence 1.0 | **implemented** |
-| Boundary matching by length/orientation/proximity | independent boundaries | heuristic, scored | partial (lengths + ambiguity notes); full matcher planned |
+| **Boundary matching** (corner-split arcs, length ratio + 3D Chamfer, greedy best-first) | independent boundaries, panels near sewn position | heuristic; confidence ≤ 0.9; ambiguity + unmatched arcs reported | **implemented** (`proposeBoundaryMatches`) |
 | Learned stitch prediction | trained GNN | probabilistic | deferred |
 
 ## 4. Boundary regularisation

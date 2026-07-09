@@ -9,6 +9,10 @@
 //             pairing, regularise, SVG/DXF export, project save
 //   auto      --mesh M --truth GT.json --out DIR
 //             automatic segmentation baseline vs ground truth (IoU)
+//   match     --mesh M --out DIR [--flattener lscm|arap] [--project P]
+//             pre-cut garment (separate panel meshes as disconnected
+//             components): match panel boundaries into seam proposals,
+//             then flatten and export
 //   roundtrip --project P.sfrproj           load & re-save, verify identical
 //
 // Seam JSON format: {"seams": [{"vertices": [i0, i1, ...]}, ...]}
@@ -16,6 +20,7 @@
 #include "core/Export.h"
 #include "core/Flatten.h"
 #include "core/Io.h"
+#include "core/Matching.h"
 #include "core/Project.h"
 #include "core/Regularize.h"
 #include "core/Relations.h"
@@ -350,6 +355,109 @@ int cmdAuto(const std::map<std::string, std::string>& a) {
     return meanIoU > 0.5 ? 0 : 2;
 }
 
+int cmdMatch(const std::map<std::string, std::string>& a) {
+    if (!a.count("mesh") || !a.count("out")) return fail("--mesh and --out required");
+    sf::TriMesh mesh;
+    std::string err;
+    auto importer = sf::makeImporterFor(a.at("mesh"));
+    auto res = importer->load(a.at("mesh"));
+    if (!res.success) return fail(res.message);
+    mesh = std::move(res.mesh);
+    // Pre-cut panels frequently have exactly coincident boundary vertices
+    // (digital cuts); welding would silently sew the panels back together,
+    // so duplicate welding is disabled for this workflow (DECISION_LOG D16).
+    sf::ValidationOptions vopt;
+    vopt.weldDuplicates = false;
+    sf::ValidationReport rep = sf::validateAndRepair(mesh, vopt);
+    std::cerr << rep.toText();
+    if (!rep.flattenable()) return fail("mesh has blocking validation errors");
+
+    // disconnected components become one panel each (no cuts performed)
+    auto seg = sf::segmentBySeams(mesh, {});
+    for (const auto& p : seg.problems) std::cerr << "segmentation: " << p << "\n";
+    if (seg.panels.size() < 2)
+        return fail("pre-cut matching needs >= 2 disconnected panel meshes; found " +
+                    std::to_string(seg.panels.size()));
+    std::cout << seg.panels.size() << " panels (disconnected components)\n";
+
+    auto match = sf::proposeBoundaryMatches(seg.panels);
+    std::cerr << match.log;
+    if (match.relations.empty()) return fail("no boundary matches found");
+
+    fs::path outDir = a.at("out");
+    fs::create_directories(outDir);
+
+    auto flattener = sf::makeFlattener(a.count("flattener") ? a.at("flattener") : "arap");
+    if (!flattener) return fail("unknown flattener");
+    for (auto& p : seg.panels) {
+        auto fr = flattener->flatten(p);
+        if (!fr.success)
+            return fail("flatten panel " + std::to_string(p.id) + ": " + fr.message);
+        p.UV = fr.UV;
+    }
+    sf::updateRelationLengths(match.relations, seg.panels);
+
+    json metrics;
+    metrics["panelCount"] = seg.panels.size();
+    json relsJson = json::array();
+    for (const auto& r : match.relations) {
+        std::cout << "seam " << r.seamId << ": panel " << r.a.panelId << " <-> panel "
+                  << r.b.panelId << ", confidence " << r.confidence
+                  << ", 2D length mismatch " << r.lengthMismatch2d * 100 << "%"
+                  << (r.note.empty() ? "" : (" [" + r.note + "]")) << "\n";
+        relsJson.push_back({{"seamId", r.seamId},
+                            {"panelA", r.a.panelId},
+                            {"panelB", r.b.panelId},
+                            {"confidence", r.confidence},
+                            {"lengthMismatch2d", r.lengthMismatch2d},
+                            {"note", r.note}});
+    }
+    metrics["relations"] = relsJson;
+    metrics["unmatchedArcs"] = match.unmatchedArcs;
+    for (const auto& u : match.unmatchedArcs) std::cout << u << "\n";
+
+    double tol = 0.004 * mesh.bbox().diagonal().norm();
+    sf::RegularizeOptions ro;
+    ro.tolerance = tol;
+    sf::CurveFitOptions cfo;
+    cfo.tolerance = tol;
+    std::vector<std::vector<sf::RegularizedLoop>> regularized;
+    for (const auto& p : seg.panels) {
+        std::vector<sf::RegularizedLoop> per;
+        sf::TriMesh pm = p.toTriMesh();
+        for (const auto& loop : pm.boundaryLoops()) {
+            std::vector<sf::Vec2> pts;
+            for (int v : loop) pts.push_back(p.UV[v]);
+            auto reg = sf::regularizeLoop(pts, ro);
+            sf::fitLoopCurves(reg, cfo);
+            per.push_back(std::move(reg));
+        }
+        regularized.push_back(std::move(per));
+    }
+
+    if (!sf::writeSvg((outDir / "pattern.svg").string(), seg.panels, regularized,
+                      match.relations, {}, &err))
+        return fail("svg: " + err);
+    std::ofstream mf(outDir / "metrics.json");
+    mf << metrics.dump(1) << "\n";
+    if (a.count("project")) {
+        sf::Project proj;
+        proj.sourcePath = a.at("mesh");
+        proj.mesh = mesh;
+        proj.seams = match.seams;
+        proj.panels = seg.panels;
+        proj.relations = match.relations;
+        proj.regularized = regularized;
+        proj.flattenerName = a.count("flattener") ? a.at("flattener") : "arap";
+        proj.validationText = rep.toText();
+        if (!proj.save(a.at("project"), &err)) return fail("project save: " + err);
+        std::cout << "project saved -> " << a.at("project") << "\n";
+    }
+    std::cout << "matched " << match.relations.size() << " seam pair(s), "
+              << match.unmatchedArcs.size() << " arc(s) unmatched -> " << outDir << "\n";
+    return 0;
+}
+
 int cmdRoundtrip(const std::map<std::string, std::string>& a) {
     if (!a.count("project")) return fail("--project required");
     sf::Project p;
@@ -371,7 +479,7 @@ int cmdRoundtrip(const std::map<std::string, std::string>& a) {
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        std::cerr << "usage: seamforge-cli <validate|propose|pipeline|auto|roundtrip> [options]\n";
+        std::cerr << "usage: seamforge-cli <validate|propose|pipeline|auto|match|roundtrip> [options]\n";
         return 1;
     }
     std::string cmd = argv[1];
@@ -380,6 +488,7 @@ int main(int argc, char** argv) {
     if (cmd == "propose") return cmdPropose(args);
     if (cmd == "pipeline") return cmdPipeline(args);
     if (cmd == "auto") return cmdAuto(args);
+    if (cmd == "match") return cmdMatch(args);
     if (cmd == "roundtrip") return cmdRoundtrip(args);
     return fail("unknown command " + cmd);
 }

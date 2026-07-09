@@ -58,7 +58,7 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 | Seams + proposal | `src/core/Seam.{h,cpp}`, `Curvature.*` |
 | Cutting/panels | `src/core/Segmentation.{h,cpp}` |
 | Flattening + distortion | `src/core/Flatten.{h,cpp}` |
-| Seam pairing | `src/core/Relations.{h,cpp}` |
+| Seam pairing | `src/core/Relations.{h,cpp}`, `Matching.{h,cpp}` (pre-cut) |
 | Regularisation | `src/core/Regularize.{h,cpp}` |
 | SVG/DXF | `src/core/Export.{h,cpp}` |
 | Project JSON | `src/core/Project.{h,cpp}` |
@@ -73,5 +73,5 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 - Sample end-to-end outputs land in `out/` (gitignored).
 
 ## Current next task
-See ROADMAP.md "Next priorities" — #1 is the independent-boundary seam
-matcher; CONTINUATION_GUIDE.md has per-task implementation sketches.
+See ROADMAP.md "Next priorities" — #1 is the D-Charts quasi-developable
+segmentation baseline; CONTINUATION_GUIDE.md has per-task sketches.

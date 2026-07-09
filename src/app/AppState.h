@@ -39,6 +39,9 @@ public:
     int addSeam(std::vector<int> vertices, sf::Seam::Source source, double confidence);
     bool deleteSeam(int seamId);
     void proposeSeams(QString* log);
+    // pre-cut garments: segment disconnected components (if not yet
+    // segmented) and match panel boundaries into seam proposals
+    bool matchBoundaries(QString* err);
     bool segment(QString* err);              // cut + label + relations
     bool flatten(QString* err);              // flatten all panels + regularise
     void setPanelLabel(int panelId, const QString& label);
