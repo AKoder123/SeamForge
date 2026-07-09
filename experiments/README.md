@@ -62,13 +62,14 @@ labelled ground truth, with failure analysis.
   | skirt_aline | — | 0.548 | 3 (truth 2) |
   | skirt_fourpanel | 0.500 | 0.477 | 2 (truth 4) |
   | tshirt_boxy | 0.468 | 0.873 | 4 (truth 2) |
-  | trousers_flat | fails (3 openings) | see report | — |
+  | trousers_flat | 0.480 | 0.705 | 2 (truth 2) |
 
 - Failure analysis:
   - *Silhouette prior*: depends on exactly two dominant boundary loops
     and a widest-silhouette assumption — it hard-codes two side seams,
     so the four-panel skirt caps at IoU 0.5, the T-shirt (4 openings)
-    degrades to 0.47, and trousers (3 openings) are declined outright
+    degrades to 0.47, and on trousers (3 openings) it connects waist to one
+    ankle and scores 0.48
     (KNOWN_LIMITATIONS #1).
   - *D-Charts*: developability is blind to construction. The whole
     frustum is one perfect cone, so the wrap-around cut position is
