@@ -16,10 +16,8 @@ namespace fs = std::filesystem;
 
 namespace {
 
-void writeCase(const fs::path& dir, const std::string& name,
-               const sf::SkirtOptions& opt) {
-    sf::GroundTruth gt;
-    sf::TriMesh m = sf::makeSkirt(opt, &gt);
+void writeMeshCase(const fs::path& dir, const std::string& name,
+                   const sf::TriMesh& m, const sf::GroundTruth& gt) {
     std::string err;
     if (!sf::writeObj((dir / (name + ".obj")).string(), m, &err)) {
         std::cerr << "write " << name << ": " << err << "\n";
@@ -29,6 +27,7 @@ void writeCase(const fs::path& dir, const std::string& name,
     j["faceLabel"] = gt.faceLabel;
     j["panelCount"] = gt.panelCount;
     j["seamPaths"] = gt.seamPaths;
+    if (!gt.dartPaths.empty()) j["dartPaths"] = gt.dartPaths;
     std::ofstream gf(dir / (name + ".gt.json"));
     gf << j.dump() << "\n";
     // seams file usable directly by `seamforge-cli pipeline`
@@ -39,6 +38,13 @@ void writeCase(const fs::path& dir, const std::string& name,
     std::ofstream sfj(dir / (name + ".seams.json"));
     sfj << js.dump() << "\n";
     std::cout << name << ": " << m.V.size() << " verts, " << m.F.size() << " faces\n";
+}
+
+void writeCase(const fs::path& dir, const std::string& name,
+               const sf::SkirtOptions& opt) {
+    sf::GroundTruth gt;
+    sf::TriMesh m = sf::makeSkirt(opt, &gt);
+    writeMeshCase(dir, name, m, gt);
 }
 
 } // namespace
@@ -71,6 +77,25 @@ int main(int argc, char** argv) {
     hard.bulge = 0.12;                             // strong curvature + noise
     hard.noise = 0.004;
     writeCase(dir, "skirt_hard", hard);
+
+    sf::SkirtOptions darted = simple;              // waist darts (crease evidence;
+    darted.darts = 2;                              // dart paths in gt dartPaths)
+    {
+        sf::GroundTruth gt;
+        sf::TriMesh m = sf::makeSkirt(darted, &gt);
+        writeMeshCase(dir, "skirt_darts", m, gt);
+    }
+
+    {
+        sf::GroundTruth gt;                        // kimono/boxy T-shirt, 2 panels,
+        sf::TriMesh m = sf::makeBoxyTee({}, &gt);  // 4 openings, 4 seams
+        writeMeshCase(dir, "tshirt_boxy", m, gt);
+    }
+    {
+        sf::GroundTruth gt;                        // pyjama trousers, 2 panels,
+        sf::TriMesh m = sf::makeFlatTrousers({}, &gt);  // 3 openings, 3 seams
+        writeMeshCase(dir, "trousers_flat", m, gt);
+    }
 
     // pre-cut variant: the simple skirt's two panels as disconnected
     // components in one OBJ (exercises boundary matching, `seamforge-cli match`)

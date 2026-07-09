@@ -26,15 +26,12 @@ this repository; 🔶 = partial; ⬜ = not started.
 
 ## Next priorities (in order)
 
-1. **Dataset growth** (TEST_STRATEGY): procedural T-shirt (tube + two
-   sleeve tubes), trousers, dart cases (a dart = interior seam whose two
-   sides pair with each other — the relation model already supports it).
-2. **XPBD validation prototype** (stage 17): assemble panels from
+1. **XPBD validation prototype** (stage 17): assemble panels from
    `.sfrproj`, pin seam pairs, relax, report Chamfer/normal/silhouette
    metrics into `metrics.json`.
-3. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
+2. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
    lengths → exact seam-length equalisation across paired seams.
-4. **Learned experiments** (stage 18): seam-candidate scoring first
+3. **Learned experiments** (stage 18): seam-candidate scoring first
    (smallest, best-supervised task), then panel-count/topology.
 
 ## Deliberately deferred (per product direction)

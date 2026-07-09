@@ -17,7 +17,7 @@ Working and tested end-to-end:
 - Qt GUI renders 3D + 2D, draws/deletes seams, segments, flattens,
   exports, saves/loads, undo/redo. Verified by Xvfb screenshot
   (docs/images/gui_skirt_project.png).
-- 45/45 Catch2 tests green in ~0.5 s (Bezier fitting, boundary matching, D-Charts baseline).
+- 49/49 Catch2 tests green in ~0.9 s (Bezier fitting, boundary matching, D-Charts baseline, tee/trousers/dart garments).
 
 Read KNOWN_LIMITATIONS.md for the honest gap list.
 
@@ -60,14 +60,18 @@ dcharts`; measured numbers + failure analysis in experiments/README.md.
 Not converted to seam paths / production pipeline on purpose — it is an
 analysis baseline (construction-blind by nature).
 
-### 1. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
-- Extend Procedural.cpp: trousers = two frustum legs + Y-join, known
-  seam paths at inseam/outseam; T-shirt = torso tube + two sleeve tubes
-  with raglan or set-in boundaries. Keep exact face labels. Darts:
-  radial slit in a disk panel (seam pairing with itself → exercises
-  KNOWN_LIMITATIONS #4).
+### ~~Procedural T-shirt/trousers/darts~~ — DONE
+Implemented via a generic two-sheet sewn construction
+(`buildTwoSheet` in Procedural.cpp): front/back bulged grid panels over
+a silhouette region sharing boundary vertices exactly where sewn.
+`makeBoxyTee` (kimono tee: 4 openings, 4 seams), `makeFlatTrousers`
+(pyjama trousers: 3 openings, 3 seams), and `SkirtOptions::darts`
+(crease geometry + `GroundTruth::dartPaths`). Cell diagonals are chosen
+to never connect two sewn vertices (would be non-manifold). Tube-based
+set-in-sleeve tees and 4-panel trousers remain future work
+(KNOWN_LIMITATIONS #13); dart *cutting/pairing* is still open (#4).
 
-### 2. XPBD validation prototype (ROADMAP #17)
+### 1. XPBD validation prototype (ROADMAP #17)
 - `experiments/resim/`: load `.sfrproj`; build particle system from
   panel UVs (rest lengths from UV edges — that's the point: patterns,
   not the 3D mesh, define rest state); constraints: edge distance +
@@ -77,7 +81,7 @@ analysis baseline (construction-blind by nature).
   silhouette IoU from 3 axis views. Report into `metrics.json`.
   Accept: Chamfer < 1% of bbox diag on `skirt_simple`.
 
-### 3. BFF flattener
+### 2. BFF flattener
 - Either port the reference implementation's core (MIT, ~2k lines,
   cholmod-dependent — replace with Eigen) or implement from the paper
   (boundary curvature → conformal factors → extension). Slot in as

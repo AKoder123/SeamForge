@@ -8,7 +8,7 @@ OUT=out/experiments/exp4
 mkdir -p "$OUT"
 [ -f data/meshes/skirt_simple.obj ] || $GEN data/meshes
 
-for case in skirt_simple skirt_noisy skirt_hard skirt_fourpanel; do
+for case in skirt_simple skirt_noisy skirt_hard skirt_fourpanel tshirt_boxy trousers_flat; do
   for baseline in silhouette dcharts; do
     echo "--- $case / $baseline ---"
     $CLI auto --mesh "data/meshes/$case.obj" \

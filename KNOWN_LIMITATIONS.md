@@ -78,9 +78,13 @@ modes observed during development.
     *3D-drawing* editing (extend/shorten existing seam) is
     delete-and-redraw rather than in-place editing.
 
-13. **Benchmark covers skirts only** (6 variants). T-shirts, trousers,
-    dresses, darts, curved seams are specified in TEST_STRATEGY but not
-    yet generated.
+13. **Benchmark now spans skirts, a kimono tee, pyjama trousers and a
+    dart skirt**, but the tee/trousers use an idealised two-sheet
+    construction (front/back panels pinch flat exactly at the seams, no
+    drape or ease) and only two-panel constructions are generated —
+    set-in sleeves, princess seams, dresses and 4-panel trousers remain
+    to be added. Dart creases exist as geometry + ground-truth paths,
+    but darts still cannot be used as cuts (see #4).
 
 14. **Undo granularity is whole-document snapshots** (project JSON).
     Simple and correct, but memory-heavy for very large scans (capped at

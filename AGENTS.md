@@ -73,5 +73,5 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 - Sample end-to-end outputs land in `out/` (gitignored).
 
 ## Current next task
-See ROADMAP.md "Next priorities" — #1 is benchmark dataset growth
-(procedural T-shirt/trousers/darts); CONTINUATION_GUIDE.md has sketches.
+See ROADMAP.md "Next priorities" — #1 is the XPBD reconstruction-
+validation prototype (stage 17); CONTINUATION_GUIDE.md has sketches.

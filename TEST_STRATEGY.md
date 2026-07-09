@@ -14,8 +14,8 @@
 
 ## Layers
 
-### Unit + integration tests (Catch2, `tests/`, 45 cases)
-Run: `ctest --test-dir build` — currently **45/45 passing**, ~0.5 s.
+### Unit + integration tests (Catch2, `tests/`, 49 cases)
+Run: `ctest --test-dir build` — currently **49/49 passing**, ~0.9 s.
 
 | File | Covers |
 |---|---|
@@ -28,6 +28,7 @@ Run: `ctest --test-dir build` — currently **45/45 passing**, ~0.5 s.
 | `test_bezier.cpp` | rectangle → 4 true lines; skirt panel → few cubics + line seams, closed connected chain, fit deviation bound, arc-length error ≤ 0.5%, whole-loop length within 1%, determinism, raw untouched; corner-free loop fallback |
 | `test_matching.cpp` | pre-cut skirt: side arcs matched (conf < 1.0, endpoints coincide, 2D mismatch < 2%), waist/hem reported unmatched, determinism, graceful decline (<2 panels), cut-ancestry boundaries excluded |
 | `test_dcharts.cpp` | full coverage, ≥2 charts on a tube, every chart a topological disk (χ=1), near-zero cone fit on the developable frustum, determinism, component separation, and an explicit construction-blindness bound (IoU < 0.95 vs GT) |
+| `test_garments.cpp` | tee/trousers: validity, loop counts, exact 2-panel segmentation, flip-free flattening, all seams paired (< 5% length mismatch); dart skirt: crease dihedral > 3x mesh mean, honest distortion, dart-as-cut refused; generator determinism |
 | `test_export_project.cpp` | SVG completeness + byte-determinism, DXF structure, **lossless project round-trip**, garbage rejection |
 | `test_propose.cpp` | 2 proposals, valid paths, confidence ∈ (0,1), endpoints on openings, segmentation IoU > 0.9, graceful decline on closed mesh |
 
@@ -90,10 +91,13 @@ All exit 0; `metrics.json` records the measured distortion.
 | `skirt_dense` | 10k faces, performance sanity |
 | `skirt_hard` | strong bulge + noise — proposal stressor (IoU 0.999) |
 | `skirt_precut` | two disconnected panel meshes — boundary-matching case |
+| `skirt_darts` | waist-dart creases (dart paths in GT) — curvature evidence + dart gap |
+| `tshirt_boxy` | kimono tee: 2 cross-shaped panels, 4 openings, 4 seams |
+| `trousers_flat` | pyjama trousers: 2 silhouette panels, 3 openings, 3 seams |
 
-Each ships `*.gt.json` (face labels + seam paths) and `*.seams.json`
-(pipeline-ready). Planned extensions: T-shirt, trousers, dress, darts,
-curved seams (KNOWN_LIMITATIONS #13).
+Each ships `*.gt.json` (face labels + seam paths + dart paths where
+present) and `*.seams.json` (pipeline-ready). Planned extensions:
+dresses, curved princess seams, set-in sleeves (KNOWN_LIMITATIONS #13).
 
 ### Metrics tracked (auto + pipeline reports)
 panel-count accuracy, per-panel IoU vs GT, seam-pair accuracy

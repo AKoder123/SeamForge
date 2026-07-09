@@ -129,3 +129,18 @@ future learned or prior-based segmenter must beat. Disk enforcement is
 incremental Euler characteristic (chi must stay 1), which also forces
 >= 2 charts on tubes — matching the physical fact that a closed tube
 cannot be flattened without a cut.
+
+## D18 — Two-sheet construction for non-skirt benchmark garments (2026-07)
+The tee and trousers are generated as two bulged height-field panels
+sharing boundary vertices exactly where sewn (kimono/pyjama
+constructions — real garment constructions with exactly two panels).
+Chosen over tube-compositing (torso + sleeve tubes with branch saddles)
+because seams, labels and topology stay analytic with zero triangulation
+ambiguity, at the cost of idealised geometry (panels pinch flat at
+seams, no drape). One subtlety: a grid cell whose diagonal connects two
+sewn (shared) vertices would put four faces on that edge — the builder
+selects the other diagonal per cell to keep the mesh manifold. Dart
+creases are radius pinches on the skirt with exact crease paths in
+GroundTruth::dartPaths; they deliberately exercise the open dart gap
+(KNOWN_LIMITATIONS #4) and provide real curvature evidence for future
+seam-candidate scoring.

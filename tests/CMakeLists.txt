@@ -8,6 +8,7 @@ add_executable(seamforge_tests
     test_bezier.cpp
     test_matching.cpp
     test_dcharts.cpp
+    test_garments.cpp
     test_export_project.cpp
     test_propose.cpp
 )
