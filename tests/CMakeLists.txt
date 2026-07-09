@@ -5,6 +5,7 @@ add_executable(seamforge_tests
     test_flatten.cpp
     test_relations.cpp
     test_regularize.cpp
+    test_bezier.cpp
     test_export_project.cpp
     test_propose.cpp
 )

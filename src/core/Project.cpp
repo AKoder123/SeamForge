@@ -110,12 +110,26 @@ json Project::toJson() const {
     j["regularized"] = json::array();
     for (const auto& perPanel : regularized) {
         json jp = json::array();
-        for (const auto& reg : perPanel)
-            jp.push_back({{"raw", vec2ArrayToJson(reg.raw)},
-                          {"keptIdx", reg.keptIdx},
-                          {"isCorner", reg.isCorner},
-                          {"isStraight", reg.isStraight},
-                          {"maxDeviation", reg.maxDeviation}});
+        for (const auto& reg : perPanel) {
+            json jr = {{"raw", vec2ArrayToJson(reg.raw)},
+                       {"keptIdx", reg.keptIdx},
+                       {"isCorner", reg.isCorner},
+                       {"isStraight", reg.isStraight},
+                       {"maxDeviation", reg.maxDeviation}};
+            if (reg.hasCurves()) {
+                json jc = json::array();
+                for (const auto& b : reg.curves)
+                    jc.push_back({{"p0", {b.p0.x(), b.p0.y()}},
+                                  {"c0", {b.c0.x(), b.c0.y()}},
+                                  {"c1", {b.c1.x(), b.c1.y()}},
+                                  {"p1", {b.p1.x(), b.p1.y()}},
+                                  {"line", b.isLine}});
+                jr["curves"] = std::move(jc);
+                jr["curveMaxDeviation"] = reg.curveMaxDeviation;
+                jr["curveMaxLengthError"] = reg.curveMaxLengthError;
+            }
+            jp.push_back(std::move(jr));
+        }
         j["regularized"].push_back(std::move(jp));
     }
     return j;
@@ -198,6 +212,19 @@ Project Project::fromJson(const json& j, std::string* err) {
             reg.isCorner = jr.value("isCorner", std::vector<bool>{});
             reg.isStraight = jr.value("isStraight", std::vector<bool>{});
             reg.maxDeviation = jr.value("maxDeviation", 0.0);
+            if (jr.contains("curves")) {
+                for (const auto& jc : jr["curves"]) {
+                    BezierSegment b;
+                    b.p0 = Vec2(jc["p0"][0].get<double>(), jc["p0"][1].get<double>());
+                    b.c0 = Vec2(jc["c0"][0].get<double>(), jc["c0"][1].get<double>());
+                    b.c1 = Vec2(jc["c1"][0].get<double>(), jc["c1"][1].get<double>());
+                    b.p1 = Vec2(jc["p1"][0].get<double>(), jc["p1"][1].get<double>());
+                    b.isLine = jc.value("line", false);
+                    reg.curves.push_back(b);
+                }
+                reg.curveMaxDeviation = jr.value("curveMaxDeviation", 0.0);
+                reg.curveMaxLengthError = jr.value("curveMaxLengthError", 0.0);
+            }
             perPanel.push_back(std::move(reg));
         }
         p.regularized.push_back(std::move(perPanel));

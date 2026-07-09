@@ -221,7 +221,15 @@ int runPipeline(sf::TriMesh& mesh, std::vector<sf::Seam> seams,
         for (const auto& loop : pm.boundaryLoops()) {
             std::vector<sf::Vec2> pts;
             for (int v : loop) pts.push_back(p.UV[v]);
-            per.push_back(sf::regularizeLoop(pts, ro));
+            auto reg = sf::regularizeLoop(pts, ro);
+            sf::CurveFitOptions cfo;
+            cfo.tolerance = ro.tolerance;
+            sf::fitLoopCurves(reg, cfo);
+            std::cout << "panel " << p.id << " boundary: " << reg.simplified.size()
+                      << " pts -> " << reg.curves.size() << " curve segments"
+                      << ", fit dev " << reg.curveMaxDeviation
+                      << ", len err " << reg.curveMaxLengthError * 100 << "%\n";
+            per.push_back(std::move(reg));
         }
         regularized.push_back(std::move(per));
     }

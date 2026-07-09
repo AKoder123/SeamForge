@@ -42,12 +42,15 @@ modes observed during development.
    (frame is still deterministic); grain-aware orientation is future
    work.
 
-8. **Regularisation is polyline-only.** No Bézier fitting yet; corners
-   and straight runs are detected and the raw boundary is always kept,
-   but exported curves are line segments (dense enough to be within the
-   documented tolerance). Control-point edits in the GUI move the
-   simplified polyline only and do not re-flow the raw boundary or
-   seam-length bookkeeping.
+8. **Curve editing is not yet curve-native.** Boundaries are fitted with
+   cubic Béziers (Schneider) between preserved corners — straight spans
+   stay true lines, arc-length error is held under the 0.5% seam budget,
+   and the raw polyline is always kept for revert. But the GUI's
+   draggable control points still edit the simplified *polyline*; moving
+   one does not re-fit the curves (re-running Flatten does). Direct
+   manipulation of Bézier handles is future work. A smooth closed loop
+   with no detected corners is split at two arbitrary kept points, so
+   the join there is C0, not smooth.
 
 9. **Validation heuristics are heuristics.** Small-hole vs garment
    opening uses a length ratio (5%); scale check assumes metres;

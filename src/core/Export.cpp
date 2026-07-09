@@ -99,16 +99,33 @@ std::string renderSvg(const std::vector<Panel>& panels,
                 os << "\" fill=\"none\" stroke=\"#aaaaaa\" stroke-width=\"0.3\"/>\n";
             }
         }
-        // regularised outline
+        // regularised outline: fitted Bezier path when available, else polyline
         if (pi < regularized.size()) {
             for (const auto& reg : regularized[pi]) {
                 if (reg.simplified.empty()) continue;
-                os << "<polygon points=\"";
-                for (const auto& q0 : reg.simplified) {
-                    Vec2 q = mm(pi, q0);
-                    os << fmt(q.x()) << ',' << fmt(q.y()) << ' ';
+                if (reg.hasCurves()) {
+                    Vec2 s0 = mm(pi, reg.curves.front().p0);
+                    os << "<path d=\"M " << fmt(s0.x()) << ' ' << fmt(s0.y());
+                    for (const auto& b : reg.curves) {
+                        if (b.isLine) {
+                            Vec2 q = mm(pi, b.p1);
+                            os << " L " << fmt(q.x()) << ' ' << fmt(q.y());
+                        } else {
+                            Vec2 c0 = mm(pi, b.c0), c1 = mm(pi, b.c1), q = mm(pi, b.p1);
+                            os << " C " << fmt(c0.x()) << ' ' << fmt(c0.y()) << ' '
+                               << fmt(c1.x()) << ' ' << fmt(c1.y()) << ' '
+                               << fmt(q.x()) << ' ' << fmt(q.y());
+                        }
+                    }
+                    os << " Z\" fill=\"none\" stroke=\"#000000\" stroke-width=\"0.6\"/>\n";
+                } else {
+                    os << "<polygon points=\"";
+                    for (const auto& q0 : reg.simplified) {
+                        Vec2 q = mm(pi, q0);
+                        os << fmt(q.x()) << ',' << fmt(q.y()) << ' ';
+                    }
+                    os << "\" fill=\"none\" stroke=\"#000000\" stroke-width=\"0.6\"/>\n";
                 }
-                os << "\" fill=\"none\" stroke=\"#000000\" stroke-width=\"0.6\"/>\n";
                 // corner markers
                 for (size_t i = 0; i < reg.simplified.size(); ++i) {
                     if (!reg.isCorner[i]) continue;

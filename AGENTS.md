@@ -73,5 +73,5 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 - Sample end-to-end outputs land in `out/` (gitignored).
 
 ## Current next task
-See ROADMAP.md "Next priorities" — #1 is Bézier boundary fitting;
-CONTINUATION_GUIDE.md has per-task implementation sketches.
+See ROADMAP.md "Next priorities" — #1 is the independent-boundary seam
+matcher; CONTINUATION_GUIDE.md has per-task implementation sketches.

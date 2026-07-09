@@ -14,8 +14,8 @@
 
 ## Layers
 
-### Unit + integration tests (Catch2, `tests/`, 32 cases)
-Run: `ctest --test-dir build` — currently **32/32 passing**, ~0.3 s.
+### Unit + integration tests (Catch2, `tests/`, 36 cases)
+Run: `ctest --test-dir build` — currently **36/36 passing**, ~0.4 s.
 
 | File | Covers |
 |---|---|
@@ -25,6 +25,7 @@ Run: `ctest --test-dir build` — currently **32/32 passing**, ~0.3 s.
 | `test_flatten.cpp` | ARAP/LSCM acceptance thresholds (below), reproducibility, A-line honest distortion, failure exposure |
 | `test_relations.cpp` | vertex-exact deterministic pairing, 2D length mismatch < 2%, ambiguity flag on non-separating seam |
 | `test_regularize.cpp` | deviation ≤ tolerance, point reduction, corner preservation/detection, straight-run detection, raw kept |
+| `test_bezier.cpp` | rectangle → 4 true lines; skirt panel → few cubics + line seams, closed connected chain, fit deviation bound, arc-length error ≤ 0.5%, whole-loop length within 1%, determinism, raw untouched; corner-free loop fallback |
 | `test_export_project.cpp` | SVG completeness + byte-determinism, DXF structure, **lossless project round-trip**, garbage rejection |
 | `test_propose.cpp` | 2 proposals, valid paths, confidence ∈ (0,1), endpoints on openings, segmentation IoU > 0.9, graceful decline on closed mesh |
 
@@ -45,8 +46,14 @@ Seam pairing:
 - both relations `cut-ancestry`, confidence 1.0, vertex-exact;
 - 2D seam-length mismatch < 2% (measured ~1e-7%).
 
+Boundary curve fitting (Schneider):
+- fitted-chain arc-length error per span ≤ 0.5% (measured 0.19% on the
+  skirt panel); loop closed and connected; deterministic; raw polyline
+  preserved for revert.
+
 Export/persistence:
-- SVG byte-identical across runs; project save→load→save identical.
+- SVG byte-identical across runs (including Bézier `<path>` outline);
+  project save→load→save identical (curves included).
 
 ### End-to-end workflow verification (manual/CI script)
 ```

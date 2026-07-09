@@ -94,13 +94,29 @@ void PatternView::rebuild() {
             }
         }
 
-        // regularised outline with editable control points
+        // regularised outline with editable control points; fitted Bezier
+        // path drawn when available (polyline kept underneath as the
+        // editable/revert layer)
         if (pi < state_->regularized.size()) {
             for (size_t li = 0; li < state_->regularized[pi].size(); ++li) {
                 const auto& reg = state_->regularized[pi][li];
+                if (reg.hasCurves()) {
+                    QPainterPath path(mapPt(reg.curves.front().p0));
+                    for (const auto& b : reg.curves) {
+                        if (b.isLine)
+                            path.lineTo(mapPt(b.p1));
+                        else
+                            path.cubicTo(mapPt(b.c0), mapPt(b.c1), mapPt(b.p1));
+                    }
+                    path.closeSubpath();
+                    auto* curveItem = scene()->addPath(path, QPen(Qt::black, 1.2));
+                    curveItem->setZValue(3);
+                }
                 QPolygonF poly;
                 for (const auto& q : reg.simplified) poly << mapPt(q);
-                auto* item = scene()->addPolygon(poly, QPen(Qt::black, 1.2));
+                auto* item = scene()->addPolygon(
+                    poly, QPen(reg.hasCurves() ? QColor(90, 120, 200) : QColor(0, 0, 0),
+                               reg.hasCurves() ? 0.5 : 1.2));
                 item->setZValue(2);
                 for (size_t k = 0; k < reg.simplified.size(); ++k) {
                     auto* cp = new ControlPointItem(this, (int)pi, (int)li, (int)k,

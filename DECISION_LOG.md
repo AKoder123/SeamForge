@@ -91,3 +91,15 @@ acceptance criteria live in TEST_STRATEGY and are enforced by the same
 Catch2 suite. Avoids code drift between "experiment" and "production"
 implementations while still keeping unmet-criteria work out of the
 default pipeline.
+
+## D15 — Schneider fitting with an arc-length re-fit loop (2026-07)
+Boundary curves are fitted per corner-span with Schneider's
+least-squares cubic algorithm (Graphics Gems I, public domain). Plain
+Schneider bounds *deviation* but not *arc length*; sewing needs paired
+seam lengths to agree, so after fitting each span we measure the
+fitted-vs-raw arc-length error and re-fit with a 4× tighter tolerance
+(up to 4 attempts) until it is ≤ 0.5%. Straight spans (line deviation
+< 0.35·tol) become true lines. Corners are hard C0 break points —
+garment patterns need exact corners at seam junctions, so smoothing
+across them would be wrong. The raw polyline remains the revert layer
+and the DXF export still uses polylines (R12 has no cubics).

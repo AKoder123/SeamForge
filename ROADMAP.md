@@ -16,7 +16,7 @@ this repository; 🔶 = partial; ⬜ = not started.
 | 9 | Two-panel skirt extraction | ✅ | full pipeline, CLI + GUI (experiment 2) |
 | 10 | Distortion visualisation | ✅ | angle/area heatmaps 2D, metrics in CLI/log |
 | 11 | Seam correspondence | ✅ | deterministic cut-ancestry pairing, reversed toggle, mismatch % |
-| 12 | Boundary regularisation | 🔶 | DP + corners + straight runs, raw revert; Bézier fitting pending |
+| 12 | Boundary regularisation | ✅ | DP + corners + straight runs + Schneider cubic Bézier fitting (seam-length budget 0.5%), raw revert |
 | 13 | SVG export | ✅ | deterministic, labelled; DXF R12 minimal as bonus |
 | 14 | Project save/load | ✅ | .sfrproj schema v1, lossless round-trip |
 | 15 | Assisted seam proposal | ✅ | silhouette-prior geodesics + curvature evidence, capped confidence |
@@ -26,26 +26,22 @@ this repository; 🔶 = partial; ⬜ = not started.
 
 ## Next priorities (in order)
 
-1. **Bézier boundary fitting** (stage 12 completion): least-squares cubic
-   fitting per boundary segment between corners (Schneider's algorithm),
-   preserving seam-length compatibility; diff view raw↔fit already
-   supported by the data model.
-2. **Independent-boundary seam matcher** (extends stage 11): score
+1. **Independent-boundary seam matcher** (extends stage 11): score
    candidate pairings by length/orientation/original-proximity for
    boundaries *not* created by the same cut (needed for garments whose
    seams coincide with existing mesh boundaries).
-3. **D-Charts quasi-developable baseline** (stage 16): second automatic
+2. **D-Charts quasi-developable baseline** (stage 16): second automatic
    segmentation baseline; compare on benchmark IoU vs the silhouette
    prior; failure analysis on `skirt_hard`, T-shirt.
-4. **Dataset growth** (TEST_STRATEGY): procedural T-shirt (tube + two
+3. **Dataset growth** (TEST_STRATEGY): procedural T-shirt (tube + two
    sleeve tubes), trousers, dart cases (a dart = interior seam whose two
    sides pair with each other — the relation model already supports it).
-5. **XPBD validation prototype** (stage 17): assemble panels from
+4. **XPBD validation prototype** (stage 17): assemble panels from
    `.sfrproj`, pin seam pairs, relax, report Chamfer/normal/silhouette
    metrics into `metrics.json`.
-6. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
+5. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
    lengths → exact seam-length equalisation across paired seams.
-7. **Learned experiments** (stage 18): seam-candidate scoring first
+6. **Learned experiments** (stage 18): seam-candidate scoring first
    (smallest, best-supervised task), then panel-count/topology.
 
 ## Deliberately deferred (per product direction)

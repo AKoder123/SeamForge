@@ -243,7 +243,16 @@ bool AppState::flatten(QString* err) {
         for (const auto& loop : pm.boundaryLoops()) {
             std::vector<sf::Vec2> pts;
             for (int v : loop) pts.push_back(p.UV[v]);
-            per.push_back(sf::regularizeLoop(pts, ro));
+            auto reg = sf::regularizeLoop(pts, ro);
+            sf::CurveFitOptions cfo;
+            cfo.tolerance = ro.tolerance;
+            sf::fitLoopCurves(reg, cfo);
+            emit logMessage(QString("panel %1 boundary: %2 curve segments, fit dev %3, length err %4%")
+                                .arg(p.id)
+                                .arg(reg.curves.size())
+                                .arg(reg.curveMaxDeviation, 0, 'g', 3)
+                                .arg(reg.curveMaxLengthError * 100, 0, 'g', 3));
+            per.push_back(std::move(reg));
         }
         regularized.push_back(std::move(per));
     }

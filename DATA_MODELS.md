@@ -52,6 +52,13 @@
 - `raw` — the untouched flattened boundary polyline (revert target).
 - `keptIdx` → `simplified`; `isCorner` per kept point; `isStraight` per
   kept segment; `maxDeviation` — measured raw↔simplified bound.
+- `curves: vector<BezierSegment{p0,c0,c1,p1,isLine}>` — smooth outline:
+  ordered closed chain of cubic Béziers/true lines fitted between
+  corners (Schneider least-squares with adaptive splitting); filled by
+  `fitLoopCurves`. `curveMaxDeviation` (fit accuracy) and
+  `curveMaxLengthError` (worst per-span relative arc-length error;
+  fitting re-subdivides until ≤ 0.5% for seam-length compatibility)
+  are measured, not assumed.
 
 ### Distortion
 - Per face: singular values σ1 ≥ σ2 of the 3D→2D Jacobian;
@@ -92,7 +99,13 @@ Self-contained JSON; loaders reject `schemaVersion` > supported.
                    "note": "" } ],
   "regularized": [ [ { "raw": [[u,v],...], "keptIdx": [...],
                        "isCorner": [...], "isStraight": [...],
-                       "maxDeviation": 0.002 } ] ]   // per panel, per loop
+                       "maxDeviation": 0.002,
+                       // present when curves were fitted:
+                       "curves": [ { "p0": [u,v], "c0": [u,v],
+                                     "c1": [u,v], "p1": [u,v],
+                                     "line": false } ],
+                       "curveMaxDeviation": 0.006,
+                       "curveMaxLengthError": 0.0019 } ] ]  // per panel, per loop
 }
 ```
 
@@ -118,7 +131,9 @@ files are parsed natively (Assimp re-indexes OBJ vertices).
 - Units mm (`unitsToMm = 1000`), y-down document space.
 - Per panel `<g id="panel-N" data-label="...">`: optional per-triangle
   angle-distortion heatmap, raw boundary (grey 0.3), regularised outline
-  (black 0.6) with corner dots, seam labels `S<n>` at segment midpoints,
+  (black 0.6) — a `<path>` with `L`/`C` commands when Bézier curves are
+  fitted, else a `<polygon>` — with corner dots, seam labels `S<n>` at
+  segment midpoints,
   panel label + bbox dimensions; document footer lists seam relations
   with confidence and length mismatch.
 - Fixed 3-decimal precision → deterministic, diffable output.

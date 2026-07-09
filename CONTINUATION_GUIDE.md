@@ -17,7 +17,7 @@ Working and tested end-to-end:
 - Qt GUI renders 3D + 2D, draws/deletes seams, segments, flattens,
   exports, saves/loads, undo/redo. Verified by Xvfb screenshot
   (docs/images/gui_skirt_project.png).
-- 32/32 Catch2 tests green in ~0.3 s.
+- 36/36 Catch2 tests green in ~0.4 s (incl. Bezier boundary fitting).
 
 Read KNOWN_LIMITATIONS.md for the honest gap list.
 
@@ -30,20 +30,17 @@ bash experiments/run_all.sh          # drives experiments 1-4 via the CLI
 
 ## Implementation sketches for the next priorities
 
-### 1. Bézier boundary fitting (finish ROADMAP #12)
-- New: `sf::fitBezierSegments(const RegularizedLoop&, double tol)` in
-  Regularize. Between consecutive corners (`isCorner`), run Schneider's
-  least-squares cubic fitting (Graphics Gems I, public domain algorithm)
-  over the RAW points of that span (indices are `keptIdx` ranges over
-  `raw`). Store as `struct BezierSegment { Vec2 p0, c0, c1, p1; }` added
-  to RegularizedLoop (+ JSON: extend schema, bump minor field only —
-  loaders ignore unknown keys, so schemaVersion can stay 1).
-- Straight runs (`isStraight`) stay lines.
-- Constraint: total curve length per seam segment must stay within 0.5%
-  of the raw polyline length (seam compatibility) — add a test.
-- SVG: emit `C` path commands; keep polyline as the revert layer.
+### ~~1. Bézier boundary fitting~~ — DONE
+Implemented as `sf::fitLoopCurves` (Regularize.h/.cpp): Schneider
+least-squares cubics per corner span with an arc-length re-fit loop
+(≤ 0.5% per span, see DECISION_LOG D15), true lines for straight spans,
+`curves` serialised in `.sfrproj`, SVG `<path>` with C commands, GUI
+draws the fitted outline (polyline remains the editable/revert layer).
+Tests in `tests/test_bezier.cpp`. Remaining niceties are listed in
+KNOWN_LIMITATIONS #8 (curve-native handle editing, smooth join on
+corner-free loops).
 
-### 2. Independent-boundary seam matcher (ROADMAP #11 extension)
+### 1. Independent-boundary seam matcher (ROADMAP #11 extension)
 - New module `Matching.{h,cpp}`:
   `std::vector<SeamRelation> proposeBoundaryMatches(panels, mesh)`.
 - Candidates: all pairs of `BoundarySegment`s with `seamId == -1` from
@@ -56,21 +53,21 @@ bash experiments/run_all.sh          # drives experiments 1-4 via the CLI
   one scene (2 components), verify the waist/hem stay unmatched and the
   two side pairs are found.
 
-### 3. D-Charts developable baseline (ROADMAP #16)
+### 2. D-Charts developable baseline (ROADMAP #16)
 - New `SegmentationBaselines.{h,cpp}`: greedy chart growth; fitting
   proxy per chart = cone (Julius et al. eq. 2: normals lie on a circle);
   merge/regularise; convert chart boundaries to seam paths (shortest
   edge paths along chart frontier), then reuse the normal pipeline.
 - Evaluate with `seamforge-cli auto --baseline dcharts`.
 
-### 4. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
+### 3. Procedural T-shirt/trousers (TEST_STRATEGY dataset)
 - Extend Procedural.cpp: trousers = two frustum legs + Y-join, known
   seam paths at inseam/outseam; T-shirt = torso tube + two sleeve tubes
   with raglan or set-in boundaries. Keep exact face labels. Darts:
   radial slit in a disk panel (seam pairing with itself → exercises
   KNOWN_LIMITATIONS #4).
 
-### 5. XPBD validation prototype (ROADMAP #17)
+### 4. XPBD validation prototype (ROADMAP #17)
 - `experiments/resim/`: load `.sfrproj`; build particle system from
   panel UVs (rest lengths from UV edges — that's the point: patterns,
   not the 3D mesh, define rest state); constraints: edge distance +
@@ -80,7 +77,7 @@ bash experiments/run_all.sh          # drives experiments 1-4 via the CLI
   silhouette IoU from 3 axis views. Report into `metrics.json`.
   Accept: Chamfer < 1% of bbox diag on `skirt_simple`.
 
-### 6. BFF flattener
+### 5. BFF flattener
 - Either port the reference implementation's core (MIT, ~2k lines,
   cholmod-dependent — replace with Eigen) or implement from the paper
   (boundary curvature → conformal factors → extension). Slot in as

@@ -46,8 +46,8 @@ scale gradients that corrupt seam lengths.
 
 | Method | Pros | Cons | Status |
 |---|---|---|---|
-| **Corner-aware Douglas-Peucker** + straight-run detection | simple, deterministic, tolerance = deviation bound | polyline only (no G1 curves yet) | **implemented** |
-| Least-squares Bézier fitting per segment (Schneider 90) | smooth editable curves | corner classification needed first (done) | next step; data model already stores per-segment flags |
+| **Corner-aware Douglas-Peucker** + straight-run detection | simple, deterministic, tolerance = deviation bound | polyline representation | **implemented** (revert layer) |
+| **Least-squares cubic Bézier fitting per corner span (Schneider 90)** | smooth curves, few segments (skirt panel: 96 raw pts → 4 segments), arc-length error ≤ 0.5% enforced by adaptive re-fitting | C0 joins on corner-free loops; GUI handles not curve-native yet | **implemented** (`fitLoopCurves`) |
 | Active contours on distortion field | seam-length aware | complex, global | deferred |
 
 ## 5. Mesh representation
