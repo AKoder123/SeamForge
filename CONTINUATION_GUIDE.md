@@ -17,7 +17,7 @@ Working and tested end-to-end:
 - Qt GUI renders 3D + 2D, draws/deletes seams, segments, flattens,
   exports, saves/loads, undo/redo. Verified by Xvfb screenshot
   (docs/images/gui_skirt_project.png).
-- 49/49 Catch2 tests green in ~0.9 s (Bezier fitting, boundary matching, D-Charts baseline, tee/trousers/dart garments).
+- 53/53 Catch2 tests green in ~0.8 s (Bezier fitting, boundary matching, D-Charts baseline, tee/trousers/dart garments, resim validation).
 
 Read KNOWN_LIMITATIONS.md for the honest gap list.
 
@@ -71,17 +71,19 @@ to never connect two sewn vertices (would be non-manifold). Tube-based
 set-in-sleeve tees and 4-panel trousers remain future work
 (KNOWN_LIMITATIONS #13); dart *cutting/pairing* is still open (#4).
 
-### 1. XPBD validation prototype (ROADMAP #17)
-- `experiments/resim/`: load `.sfrproj`; build particle system from
-  panel UVs (rest lengths from UV edges — that's the point: patterns,
-  not the 3D mesh, define rest state); constraints: edge distance +
-  seam-pair pinning (relations give exact vertex pairs); relax under
-  gravity=0 toward the source shape? No — relax freely, then rigid-align
-  (Procrustes) and measure bidirectional Chamfer, normal deviation,
-  silhouette IoU from 3 axis views. Report into `metrics.json`.
-  Accept: Chamfer < 1% of bbox diag on `skirt_simple`.
+### ~~XPBD validation prototype~~ — DONE
+Implemented as `sf::resimulateValidate` (Resimulate.h/.cpp) +
+`seamforge-cli resim`: PBD relaxation governed purely by the pattern
+metric (UV edge rest lengths + seam-pair pinning, proportional
+resampling for unequal sides), Kabsch alignment, then drift (exact
+correspondence), Chamfer, normal deviation, 3-view silhouette IoU and
+residual seam gaps. Initialised at the source shape, so it validates
+METRIC consistency, not from-scratch drapability (KNOWN_LIMITATIONS
+#17). Gate calibrated at 0.6% drift: consistent tee 0.47%, 6%-corrupted
+skirt 0.83% (rejected). `--corrupt S` demonstrates discrimination
+(experiment 6). Next level: real drape (gravity, collisions, body).
 
-### 2. BFF flattener
+### 1. BFF flattener
 - Either port the reference implementation's core (MIT, ~2k lines,
   cholmod-dependent — replace with Eigen) or implement from the paper
   (boundary curvature → conformal factors → extension). Slot in as

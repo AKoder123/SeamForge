@@ -9,6 +9,7 @@ add_library(seamforge_core STATIC
     Relations.cpp
     Matching.cpp
     SegmentationBaselines.cpp
+    Resimulate.cpp
     Regularize.cpp
     Export.cpp
     Project.cpp

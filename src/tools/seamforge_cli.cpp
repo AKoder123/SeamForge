@@ -13,6 +13,12 @@
 //             pre-cut garment (separate panel meshes as disconnected
 //             components): match panel boundaries into seam proposals,
 //             then flatten and export
+//   resim     --project P.sfrproj --out DIR [--iterations N] [--corrupt S]
+//             reconstruction validation: reassemble panels from the 2D
+//             pattern metric (UV rest lengths + seam pinning), relax, and
+//             measure drift/Chamfer/normals/silhouette vs the source.
+//             --corrupt S scales panel 0's pattern by S to demonstrate
+//             that inconsistent patterns are detected.
 //   roundtrip --project P.sfrproj           load & re-save, verify identical
 //
 // Seam JSON format: {"seams": [{"vertices": [i0, i1, ...]}, ...]}
@@ -24,6 +30,7 @@
 #include "core/Project.h"
 #include "core/Regularize.h"
 #include "core/Relations.h"
+#include "core/Resimulate.h"
 #include "core/Seam.h"
 #include "core/Segmentation.h"
 #include "core/SegmentationBaselines.h"
@@ -481,6 +488,53 @@ int cmdMatch(const std::map<std::string, std::string>& a) {
     return 0;
 }
 
+int cmdResim(const std::map<std::string, std::string>& a) {
+    if (!a.count("project") || !a.count("out"))
+        return fail("--project and --out required");
+    sf::Project proj;
+    std::string err;
+    if (!sf::Project::load(a.at("project"), proj, &err)) return fail(err);
+
+    sf::ResimOptions opt;
+    if (a.count("iterations")) opt.iterations = std::stoi(a.at("iterations"));
+    if (a.count("corrupt")) opt.corruptPanel0Scale = std::stod(a.at("corrupt"));
+
+    auto m = sf::resimulateValidate(proj, opt);
+    if (!m.success) return fail(m.message);
+
+    std::cout << "resim (" << m.iterationsRun << " iterations"
+              << (opt.corruptPanel0Scale != 1.0
+                      ? ", panel 0 pattern corrupted x" + a.at("corrupt")
+                      : "")
+              << "):\n"
+              << "  drift rms " << m.driftRms * 1000 << " mm ("
+              << m.driftRmsRel * 100 << "% of bbox diag), max "
+              << m.driftMax * 1000 << " mm\n"
+              << "  chamfer " << m.chamfer * 1000 << " mm\n"
+              << "  mean normal deviation " << m.meanNormalDeviationDeg << " deg\n"
+              << "  silhouette IoU " << m.silhouetteIoU << "\n"
+              << "  seam gap mean " << m.meanSeamGap * 1000 << " mm, max "
+              << m.maxSeamGap * 1000 << " mm\n";
+
+    json rep = {{"iterations", m.iterationsRun},
+                {"corruptPanel0Scale", opt.corruptPanel0Scale},
+                {"driftRms", m.driftRms},
+                {"driftRmsRel", m.driftRmsRel},
+                {"driftMax", m.driftMax},
+                {"chamfer", m.chamfer},
+                {"meanNormalDeviationDeg", m.meanNormalDeviationDeg},
+                {"silhouetteIoU", m.silhouetteIoU},
+                {"meanSeamGap", m.meanSeamGap},
+                {"maxSeamGap", m.maxSeamGap}};
+    fs::create_directories(a.at("out"));
+    std::ofstream rf(fs::path(a.at("out")) / "resim_report.json");
+    rf << rep.dump(1) << "\n";
+    // acceptance gate (TEST_STRATEGY), calibrated on the benchmark:
+    // consistent patterns measure <= 0.5% drift even on non-developable
+    // garments (tee 0.47%), while a 6% panel-scale error measures 0.83%
+    return m.driftRmsRel < 0.006 ? 0 : 2;
+}
+
 int cmdRoundtrip(const std::map<std::string, std::string>& a) {
     if (!a.count("project")) return fail("--project required");
     sf::Project p;
@@ -512,6 +566,7 @@ int main(int argc, char** argv) {
     if (cmd == "pipeline") return cmdPipeline(args);
     if (cmd == "auto") return cmdAuto(args);
     if (cmd == "match") return cmdMatch(args);
+    if (cmd == "resim") return cmdResim(args);
     if (cmd == "roundtrip") return cmdRoundtrip(args);
     return fail("unknown command " + cmd);
 }

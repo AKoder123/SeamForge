@@ -93,6 +93,22 @@ reported, flattened panels, SVG, project.
 - Note: duplicate welding is disabled in this workflow (DECISION_LOG
   D16) so digitally-cut coincident boundaries survive import.
 
+## Experiment 6 — reconstruction validation (resimulation)
+2D inferred panels → seam assembly → constraint relaxation →
+reconstructed 3D → comparison with the source garment.
+
+- Script: `exp6_resim_validation.sh`
+- Method: PBD relaxation governed purely by the pattern metric (UV edge
+  rest lengths + seam pinning), initialised at the source shape →
+  validates metric consistency (KNOWN_LIMITATIONS #17).
+- Measured (skirt_simple, ARAP pattern): drift 1.1e-8 mm, Chamfer
+  6.7e-9 mm, normal deviation 2.4e-7°, silhouette IoU 1.0, seams closed.
+- Discrimination: scaling one panel by 6% (`--corrupt 1.06`) produces
+  13.8 mm drift (0.83% of bbox diag), 6.4° normal deviation and 2.5 mm
+  max seam gap — correctly rejected by the 0.6% acceptance gate.
+  Non-developable tee measures 0.47% (accepted: honest ARAP distortion,
+  consistent pattern).
+
 ## Not yet run
 - Learned experiments (panel count, seam scoring, NeuralTailor-style
   reconstruction) — deliberately deferred until after the deterministic

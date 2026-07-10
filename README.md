@@ -58,7 +58,7 @@ build/src/tools/seamforge-cli match \
   --mesh data/meshes/skirt_precut.obj --out out/precut   # pre-cut panels:
                                     # boundary-matched seam proposals
 
-bash experiments/run_all.sh       # experiments 1-5
+bash experiments/run_all.sh       # experiments 1-6
 ```
 
 ## GUI

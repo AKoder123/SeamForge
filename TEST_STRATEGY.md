@@ -14,8 +14,8 @@
 
 ## Layers
 
-### Unit + integration tests (Catch2, `tests/`, 49 cases)
-Run: `ctest --test-dir build` — currently **49/49 passing**, ~0.9 s.
+### Unit + integration tests (Catch2, `tests/`, 53 cases)
+Run: `ctest --test-dir build` — currently **53/53 passing**, ~0.8 s.
 
 | File | Covers |
 |---|---|
@@ -29,6 +29,7 @@ Run: `ctest --test-dir build` — currently **49/49 passing**, ~0.9 s.
 | `test_matching.cpp` | pre-cut skirt: side arcs matched (conf < 1.0, endpoints coincide, 2D mismatch < 2%), waist/hem reported unmatched, determinism, graceful decline (<2 panels), cut-ancestry boundaries excluded |
 | `test_dcharts.cpp` | full coverage, ≥2 charts on a tube, every chart a topological disk (χ=1), near-zero cone fit on the developable frustum, determinism, component separation, and an explicit construction-blindness bound (IoU < 0.95 vs GT) |
 | `test_garments.cpp` | tee/trousers: validity, loop counts, exact 2-panel segmentation, flip-free flattening, all seams paired (< 5% length mismatch); dart skirt: crease dihedral > 3x mesh mean, honest distortion, dart-as-cut refused; generator determinism |
+| `test_resim.cpp` | consistent pattern: drift < 1% (measured ~5e-10%), IoU > 0.95, seams close; corrupted pattern (6% panel scale) detected at 100x the consistent drift; A-line within honest budget; determinism; missing-input reporting |
 | `test_export_project.cpp` | SVG completeness + byte-determinism, DXF structure, **lossless project round-trip**, garbage rejection |
 | `test_propose.cpp` | 2 proposals, valid paths, confidence ∈ (0,1), endpoints on openings, segmentation IoU > 0.9, graceful decline on closed mesh |
 
@@ -57,6 +58,13 @@ Boundary curve fitting (Schneider):
 Export/persistence:
 - SVG byte-identical across runs (including Bézier `<path>` outline);
   project save→load→save identical (curves included).
+
+Reconstruction validation (`resim`, calibrated on the benchmark):
+- consistent patterns: drift ≤ 0.6% of bbox diag (measured: skirt
+  ~7e-10%, non-developable tee 0.47%); silhouette IoU > 0.95 on the
+  skirt; seams close to < 5 mm;
+- a 6% single-panel scale error must be rejected (measured 0.83% drift,
+  6.4° normal deviation, 2.5 mm max seam gap).
 
 ### End-to-end workflow verification (manual/CI script)
 ```

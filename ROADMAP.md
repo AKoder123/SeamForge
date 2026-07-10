@@ -21,14 +21,16 @@ this repository; 🔶 = partial; ⬜ = not started.
 | 14 | Project save/load | ✅ | .sfrproj schema v1, lossless round-trip |
 | 15 | Assisted seam proposal | ✅ | silhouette-prior geodesics + curvature evidence, capped confidence |
 | 16 | Automatic segmentation baseline | ✅ | two baselines: silhouette prior (IoU 1.0 clean / 0.999 hard) and D-Charts quasi-developable (disk-enforced; IoU 0.94/0.58 — quantifies construction-blindness) |
-| 17 | Reconstruction validation | ⬜ | XPBD prototype: pin paired seam vertices, relax, Chamfer vs source |
+| 17 | Reconstruction validation | ✅ | equilibrium-consistency prototype (`seamforge-cli resim`): pattern-metric relaxation + Kabsch align; drift/Chamfer/normals/silhouette/seam-gap metrics; detects a 6% panel error (0.83% drift vs ~0). From-scratch drape reconstruction remains future work |
 | 18 | Learned experiments | ⬜ | isolated, behind interfaces; Korosteleva & Lee dataset |
 
 ## Next priorities (in order)
 
-1. **XPBD validation prototype** (stage 17): assemble panels from
-   `.sfrproj`, pin seam pairs, relax, report Chamfer/normal/silhouette
-   metrics into `metrics.json`.
+1. **Dart cutting and pairing** (KNOWN_LIMITATIONS #4): a dart is an
+   interior seam whose two sides pair with each other; geometry and
+   ground truth exist in `skirt_darts` — segmentation needs interior-cut
+   support (duplicate vertices along the dart without separating a
+   panel) and Relations needs self-pairing.
 2. **BFF flattener** (ALGORITHM_COMPARISON §1) for prescribed boundary
    lengths → exact seam-length equalisation across paired seams.
 3. **Learned experiments** (stage 18): seam-candidate scoring first

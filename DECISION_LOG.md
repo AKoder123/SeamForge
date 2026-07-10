@@ -144,3 +144,17 @@ creases are radius pinches on the skirt with exact crease paths in
 GroundTruth::dartPaths; they deliberately exercise the open dart gap
 (KNOWN_LIMITATIONS #4) and provide real curvature evidence for future
 seam-candidate scoring.
+
+## D19 — Resimulation validates metric consistency, initialised at the source (2026-07)
+A from-scratch drape reconstruction (place flat panels, sew, drape)
+needs collisions, bending models and a support body — without them a
+tube collapses flat and even a perfect pattern scores badly. Instead the
+prototype starts at the source shape and relaxes under constraints
+derived ONLY from the pattern (UV rest lengths, seam pinning): a
+consistent pattern keeps the source as its equilibrium (measured drift
+~1e-8 mm), while metric errors push it away (6% panel scale -> 13.8 mm
+drift, 0.83% of bbox diag). The acceptance gate is calibrated at 0.6%
+so honestly-distorted-but-consistent patterns (tee: 0.47%) pass and the
+corruption fails. This is documented as consistency checking, not
+drapability (KNOWN_LIMITATIONS #17); a real drape validator is the
+planned upgrade.

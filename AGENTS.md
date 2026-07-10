@@ -63,6 +63,7 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 | SVG/DXF | `src/core/Export.{h,cpp}` |
 | Project JSON | `src/core/Project.{h,cpp}` |
 | Benchmark shapes | `src/core/Procedural.{h,cpp}` |
+| Reconstruction validation | `src/core/Resimulate.{h,cpp}` |
 | CLI | `src/tools/seamforge_cli.cpp` |
 | GUI | `src/app/*` (AppState = document, Viewport3D = 3D, PatternView = 2D) |
 
@@ -73,5 +74,5 @@ xvfb-run -a build/src/app/seamforge --smoke        # GUI alive check
 - Sample end-to-end outputs land in `out/` (gitignored).
 
 ## Current next task
-See ROADMAP.md "Next priorities" — #1 is the XPBD reconstruction-
-validation prototype (stage 17); CONTINUATION_GUIDE.md has sketches.
+See ROADMAP.md "Next priorities" — #1 is dart cutting/pairing
+(interior seams); CONTINUATION_GUIDE.md has sketches.

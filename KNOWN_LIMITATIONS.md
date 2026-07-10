@@ -97,3 +97,12 @@ modes observed during development.
 16. **Non-manifold meshes are rejected, not repaired.** By policy
     (destructive repair must not be silent); a guided repair tool is
     future work.
+
+17. **Reconstruction validation checks metric consistency, not drape.**
+    `resim` initialises the particle system at the source shape and
+    relaxes under pattern-derived constraints only; a pattern that is
+    metrically consistent but would drape differently under gravity,
+    contact and body support is not detected. There is no collision
+    handling, no bending stiffness and no body model. The acceptance
+    gate (0.6% drift) is calibrated on the current benchmark and will
+    need re-calibration as garments get more complex.
